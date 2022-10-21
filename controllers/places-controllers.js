@@ -1,6 +1,8 @@
 const HttpError = require("../models/http-error");
 const { v4: uuidv4 } = require("uuid");
 const { validationResult } = require("express-validator");
+const Place = require("../models/place");
+
 let DUMMY_PLACES = [
   {
     id: "p1",
@@ -14,18 +16,28 @@ let DUMMY_PLACES = [
     creator: "u1",
   },
 ];
-const getPlaceByID = (req, res, next) => {
+const getPlaceByID = async (req, res, next) => {
   const placeId = req.params.pid;
-
-  const place = DUMMY_PLACES.find((p) => {
-    return p.id === placeId;
-  });
-
-  if (!place) {
-    throw new HttpError("Could not find a place for the provided id.", 404);
+  let place;
+  try {
+    place = await Place.findById(placeId);
+  } catch (err) {
+    const error = new HttpError(
+      "Something went wrong, could not find a place",
+      500
+    );
+    return next(error);
   }
 
-  res.json({ place: place });
+  if (!place) {
+    const error = new HttpError(
+      "Could not find a place for the provided id.",
+      404
+    );
+    return next(error);
+  }
+
+  res.json({ place: place.toObject({ getters: true }) });
 };
 
 const getPlacesByUserID = (req, res, next) => {
@@ -40,22 +52,29 @@ const getPlacesByUserID = (req, res, next) => {
   res.json({ places });
 };
 
-const createPlace = (req, res, next) => {
+const createPlace = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log(errors);
     throw new HttpError("Invalid inputs passed, please check your data.", 422);
   }
   const { title, description, coordinates, address, creator } = req.body;
-  const createdPlace = {
-    id: uuidv4(),
+  const createdPlace = new Place({
     title,
     description,
-    location: coordinates,
     address,
+    location: coordinates,
+    image:
+      "https://a.cdn-hotels.com/gdcs/production5/d320/a0c5a994-d99a-4278-a1b1-8a3b652461ac.jpg",
     creator,
-  };
-  DUMMY_PLACES.push(createdPlace);
+  });
+  try {
+    await createdPlace.save();
+  } catch (err) {
+    const error = new HttpError("Creating place failed, please try again", 500);
+    return next(error);
+  }
+
   res.status(201).json({ place: createdPlace });
 };
 
