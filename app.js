@@ -22,7 +22,9 @@ app.use((error, req, res, next) => {
   }
   res
     .status(error.code || 500)
-    .json({ message: error.message || "An unknown error occured!" });
+    .json({
+      message: error.message || "An unknown error occured! Please try again",
+    });
 });
 
 mongoose
