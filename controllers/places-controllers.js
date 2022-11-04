@@ -156,7 +156,7 @@ const deletePlace = async (req, res, next) => {
     const error = new HttpError("Could not find place for this id", 404);
     return next(error);
   }
-  log;
+
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();

@@ -6,6 +6,8 @@ const userRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
 const mongoose = require("mongoose");
 const app = express();
+const cors = require("cors");
+app.use(cors());
 
 app.use(bodyParser.json());
 
@@ -20,11 +22,9 @@ app.use((error, req, res, next) => {
   if (res.headerSent) {
     return next(error);
   }
-  res
-    .status(error.code || 500)
-    .json({
-      message: error.message || "An unknown error occured! Please try again",
-    });
+  res.status(error.code || 500).json({
+    message: error.message || "An unknown error occured! Please try again",
+  });
 });
 
 mongoose
