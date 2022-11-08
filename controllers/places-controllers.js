@@ -1,4 +1,5 @@
 const HttpError = require("../models/http-error");
+const fs = require("fs");
 const { validationResult } = require("express-validator");
 const Place = require("../models/place");
 const User = require("../models/users");
@@ -66,8 +67,7 @@ const createPlace = async (req, res, next) => {
     description,
     address,
     location: coordinates,
-    image:
-      "https://a.cdn-hotels.com/gdcs/production5/d320/a0c5a994-d99a-4278-a1b1-8a3b652461ac.jpg",
+    image: req.file.path,
     creator,
   });
 
@@ -122,6 +122,11 @@ const updatePlace = async (req, res, next) => {
     return next(error);
   }
 
+  if (place.creator.toString() !== req.userData.userId) {
+    const error = new HttpError("You are not allowed to edit this place", 401);
+    return next(error);
+  }
+
   place.title = title;
   place.description = description;
 
@@ -157,6 +162,13 @@ const deletePlace = async (req, res, next) => {
     return next(error);
   }
 
+  if (place.creator.id !== req.userData.userId) {
+    const error = new HttpError("You are not allowed to edit this place", 403);
+    return next(error);
+  }
+
+  const imagePath = place.image;
+
   try {
     const sess = await mongoose.startSession();
     sess.startTransaction();
@@ -172,6 +184,9 @@ const deletePlace = async (req, res, next) => {
 
     return next(error);
   }
+  fs.unlink(imagePath, (err) => {
+    console.log(err);
+  });
 
   res.status(200).json({ message: "Deleted place." });
 };

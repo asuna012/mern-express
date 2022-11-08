@@ -1,6 +1,7 @@
 const express = require("express");
+const path = require('path')
 const bodyParser = require("body-parser");
-
+const  fs = require('fs')
 const placesRoutes = require("./routes/places-routes");
 const userRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
@@ -10,6 +11,7 @@ const cors = require("cors");
 app.use(cors());
 
 app.use(bodyParser.json());
+app.use('/uploads/images', express.static(path.join('uploads', 'images')))
 
 app.use("/api/places", placesRoutes);
 app.use("/api/users", userRoutes);
@@ -18,7 +20,15 @@ app.use((req, res, next) => {
   throw error;
 });
 
+
+
 app.use((error, req, res, next) => {
+  if(req.file){
+    fs.unlink(req.file.path, (err)=>{
+    console.log(err);
+    
+    })
+  }
   if (res.headerSent) {
     return next(error);
   }
