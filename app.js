@@ -1,7 +1,7 @@
 const express = require("express");
-const path = require('path')
+const path = require("path");
 const bodyParser = require("body-parser");
-const  fs = require('fs')
+const fs = require("fs");
 const placesRoutes = require("./routes/places-routes");
 const userRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
@@ -11,7 +11,7 @@ const cors = require("cors");
 app.use(cors());
 
 app.use(bodyParser.json());
-app.use('/uploads/images', express.static(path.join('uploads', 'images')))
+app.use("/uploads/images", express.static(path.join("uploads", "images")));
 
 app.use("/api/places", placesRoutes);
 app.use("/api/users", userRoutes);
@@ -20,14 +20,11 @@ app.use((req, res, next) => {
   throw error;
 });
 
-
-
 app.use((error, req, res, next) => {
-  if(req.file){
-    fs.unlink(req.file.path, (err)=>{
-    console.log(err);
-    
-    })
+  if (req.file) {
+    fs.unlink(req.file.path, (err) => {
+      console.log(err);
+    });
   }
   if (res.headerSent) {
     return next(error);
@@ -39,7 +36,7 @@ app.use((error, req, res, next) => {
 
 mongoose
   .connect(
-    "mongodb+srv://lelouch:LCv1lQ8Y9B8lBfuJ@cluster0.hhzr3e3.mongodb.net/places?retryWrites=true&w=majority"
+    `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.hhzr3e3.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`
   )
   .then(() => {
     app.listen(5000);
